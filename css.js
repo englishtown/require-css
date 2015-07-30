@@ -41,6 +41,8 @@ define(function() {
 
   // use <style> @import load method (IE < 9, Firefox < 18)
   var useImportLoad = false;
+
+  var processCss = typeof respond !== 'undefined' && respond.process;
   
   // set to false for explicit <link> load checking when onload doesn't work perfectly (webkit)
   var useOnload = true;
@@ -55,7 +57,12 @@ define(function() {
   else if (engine[4])
     useImportLoad = parseInt(engine[4]) < 18;
 
-//>>excludeEnd('excludeRequireCss')
+  // To work with Respond.js (doesn't parse CSS referenced via @import)
+  if (processCss) {
+    useImportLoad = false;
+  }
+
+  //>>excludeEnd('excludeRequireCss')
   //main api object
   var cssAPI = {};
 
@@ -132,6 +139,7 @@ define(function() {
     if (useOnload)
       link.onload = function() {
         link.onload = function() {};
+        processCss && processCss(link);
         // for style dimensions queries, a short delay can still be necessary
         setTimeout(callback, 7);
       }
@@ -140,6 +148,7 @@ define(function() {
         for (var i = 0; i < document.styleSheets.length; i++) {
           var sheet = document.styleSheets[i];
           if (sheet.href == link.href) {
+            processCss && processCss(link);
             clearInterval(loadInterval);
             return callback();
           }
